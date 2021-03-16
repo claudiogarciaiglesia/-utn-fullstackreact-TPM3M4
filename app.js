@@ -75,6 +75,7 @@ app.post("/libro", async (req, res) => {
     // ACA HAY QUE VER SI CUANDO DEVUELVE CUMPLE CON EL REQUERIMIENTO
     res.send(registroInsertado[0]);
     res.status(200).send();
+    console.log(registroInsertado);
   } catch (e) {
     console.error(e.message);
     res.status(413).send({ Error: e.message });
