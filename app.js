@@ -15,9 +15,9 @@ const PORT = process.env.PORT || 3000;
 // Configuracion mysql
 const mysql = require("mysql");
 
-// Cors
-// const cors = require("cors");
-// app.use(cors());
+// Cors;
+const cors = require("cors");
+app.use(cors());
 
 // Estos datos de conexion pueden variar segun como este configurado el servidor de cada usuario
 const conexion = mysql.createConnection({
@@ -41,43 +41,70 @@ const qy = util.promisify(conexion.query).bind(conexion);
 // De aqui en mas se deben escribir las rutas de la API
 // Rutas de FerPM
 
-// IMPORTANTE!!! AVISO QUE TODAVÍA ESTOY REVISANDO MIS RUTAS
-// ME DI CUENTA QUE SE ME PASARON MUCHOS DETALLES PEDIDOS EN EL ENUNCIADO DEL TP
-// SEGUIRÉ COMITEANDO Y ACTUALIZANDO MAÑANA
-
 app.post("/libro", async (req, res) => {
   try {
-    // Valido que me esten enviando bien la data
-    if (!req.body.nombre || !req.body.descripcion || !req.body.categoria_id) {
-      throw new Error("No escribiste todos los datos necesarios");
+    // Desestructura el objeto
+    let { nombre, descripcion, categoria_id, persona_id } = req.body;
+
+    // Verifica que las variables descripcion y persona_id no sean indefinidas (undefined)
+    // y que no sean espacios en blanco o vacios.
+    [descripcion, persona_id].forEach((element) => {
+      if (!element || element.replace(/ /g, "") === "") {
+        throw new Error("Faltan datos");
+      }
+    });
+    // Verifica que las variables nombre y categoria no sean indefinidas (undefined)
+    // y que no sean espacios en blanco o vacios.
+    [nombre, categoria_id].forEach((element) => {
+      if (!element || element.replace(/ /g, "") === "") {
+        throw new Error("Nombre y categoría son datos obligatorios");
+      }
+    });
+
+    // Verifica que no se hayan enviado campos que no existen
+    let contador = 0;
+    [nombre, descripcion, categoria_id, persona_id].forEach((element) => {
+      if (!!element) {
+        contador++;
+      }
+    });
+    if (Object.keys(req.body).length > contador) {
+      throw new Error("Se enviaron uno o mas campos invalidos");
     }
 
-    // ACA ME FALTAN VALIDAR MUCHAS COSAS QUE SE ESPECIFICAN EN EL ENUNCIADO DEL TP Y NO LAS HABÍA VISTO
-    // MAÑANA TRABAJARÉ EN ESTO
+    // Transforma las variables a tipo string en mayusculas
+    [nombre, descripcion] = [nombre, descripcion].map((element) =>
+      element.toString().toUpperCase()
+    );
 
-    // Antes de guardar el post contemplo la posibilidad de que persona_id pueda venir NULL
-    let persona_id = "";
-    if (req.body.persona_id) {
-      persona_id = req.body.persona_id;
+    // Verifica que el libro no este repetido
+    let query = "SELECT * FROM libro WHERE nombre = ?";
+    let queryRes = await qy(query, [nombre]);
+    if (queryRes.length > 0) {
+      throw new Error("Ese libro ya existe");
     }
-    // Ahora guardamos el post
-    const query =
+
+    // Verifica que la persona exista
+    query = "SELECT * FROM persona WHERE id = ?";
+    queryRes = await qy(query, [persona_id]);
+    if (queryRes.length == 0) {
+      throw new Error("No existe la persona indicada");
+    }
+
+    // Carga el nuevo libro en la base de datos
+    query =
       "INSERT INTO libro (nombre, descripcion, categoria_id, persona_id) VALUES (?, ?, ?, ?)";
-    const respuesta = await qy(query, [
-      req.body.nombre,
-      req.body.descripcion,
-      req.body.categoria_id,
-      persona_id,
-    ]);
-    const registroInsertado = await qy("SELECT * FROM libro WHERE id=?", [
-      req.params.id,
-    ]);
-    // ACA HAY QUE VER SI CUANDO DEVUELVE CUMPLE CON EL REQUERIMIENTO
-    res.send(registroInsertado[0]);
-    res.status(200).send();
-    console.log(registroInsertado);
+    queryRes = await qy(query, [nombre, descripcion, categoria_id, persona_id]);
+
+    let id = queryRes.insertId;
+
+    // Muestra el libro actualizado
+    query = "SELECT * FROM libro WHERE id = ?";
+    queryRes = await qy(query, id);
+
+    res.status(200);
+    res.send(queryRes[0]);
   } catch (e) {
-    console.error(e.message);
     res.status(413).send({ Error: e.message });
   }
 });
@@ -87,9 +114,9 @@ app.get("/libro/:id", async (req, res) => {
     const query = "SELECT * FROM libro WHERE id = ?";
     const respuesta = await qy(query, [req.params.id]);
     if (respuesta.length == 1) {
-      res.json(respuesta[0]);
+      res.send(respuesta[0]);
     } else {
-      res.status(404).send();
+      res.status(404).send("No se encuentra ese libro");
     }
   } catch (e) {
     console.error(e.message);
