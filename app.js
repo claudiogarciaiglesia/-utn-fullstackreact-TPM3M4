@@ -329,20 +329,32 @@ app.put('/libro/:id', async (req, res) => {
         const id = req.params.id;
         let { descripcion } = req.body;
 
-        // Verifica que no se hayan enviado campos que no existen 
-        // y que los que existen no sean espacios en blanco
-        let contador = 0;
-        [descripcion].forEach(element => {
-            if (!!element) {
-                contador++
-                if (element.replace(/ /g, '') === '') {
-                    throw new Error('Se enviaron uno o mas campos invalidos');
-                }
+        if (descripcion !== null) {
+
+            // Verifica que se haya enviado la descripcion
+            if (descripcion !== "" && !descripcion) {
+                throw new Error('Se debe enviar la descripcion')
             }
-        })
-        if (Object.keys(req.body).length > contador) {
-            throw new Error('Sólo se puede modificar la descripción del libro')
-        };
+
+            // Verifica el tipo de dato enviado
+            if (typeof (descripcion) !== 'string') {
+                throw new Error('Se enviaron datos invalidos')
+            }
+
+            // Verifica que no se hayan enviado campos que no existen 
+            // y que los que existen no sean espacios en blanco
+            console.log(Object.keys(req.body).length);
+            if (Object.keys(req.body).length > 1) {
+                throw new Error('Sólo se puede modificar la descripción del libro')
+            };
+
+            if (descripcion.replace(/ /g, '') === '') {
+                descripcion = "";
+            }
+
+            // Transforma las variables a mayusculas
+            descripcion = descripcion.toString().toUpperCase();
+        }
 
         // Verifica que el libro exista
         let query = 'SELECT * FROM libro WHERE id = ?';
@@ -350,18 +362,13 @@ app.put('/libro/:id', async (req, res) => {
 
         if (queryRes.length === 0) {
             throw new Error('No se encuentra ese libro');
-        };
-
-        // Transforma las variables que no sean indefinidas a tipo string en mayusculas
-        [descripcion] = [descripcion].map(element => {
-            return (!!element ? element.toString().toUpperCase() : element);
-        });
+        }
 
         // Modifica la descripcion del libro
         query = `UPDATE libro SET descripcion = ? WHERE id = ?`;
         queryRes = await qy(query, [descripcion, id]);
 
-        // Muestra la persona actualizada
+        // Muestra la descripcion actualizada
         query = 'SELECT * FROM libro WHERE id = ?';
         queryRes = await qy(query, id);
 
