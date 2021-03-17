@@ -45,35 +45,39 @@ app.post("/libro", async (req, res) => {
         // Desestructura el objeto
         let { nombre, descripcion, categoria_id, persona_id } = req.body;
 
-        // Verifica que las variables descripcion y persona_id no sean indefinidas (undefined)
-        // y que no sean espacios en blanco o vacios.
-        [descripcion, persona_id].forEach((element) => {
-            if (!element || element.replace(/ /g, "") === "") {
-                throw new Error("Faltan datos");
-            }
-        });
-        // Verifica que las variables nombre y categoria no sean indefinidas (undefined)
-        // y que no sean espacios en blanco o vacios.
-        [nombre, categoria_id].forEach((element) => {
-            if (!element || element.replace(/ /g, "") === "") {
-                throw new Error("Nombre y categoría son datos obligatorios");
-            }
-        });
+        if (!nombre || !categoria_id) {
+            throw new Error("Nombre y categoria son datos obligatorios");
+        }
+
+        if (
+            (typeof (nombre) !== 'string') ||
+            (descripcion && typeof (descripcion) !== 'string') ||
+            (typeof (categoria_id) !== 'number') ||
+            (persona_id && typeof (persona_id) !== 'number')
+        ) {
+            throw new Error("Se enviaron datos invalidos");
+        }
+
+        // Verifica que nombre no sean espacios en blanco o vacios.
+        if (nombre.replace(/ /g, "") === "") {
+            throw new Error("Nombre y categoria son datos obligatorios");
+        }
 
         // Verifica que no se hayan enviado campos que no existen
         let contador = 0;
         [nombre, descripcion, categoria_id, persona_id].forEach((element) => {
-            if (!!element) {
+            if (element !== undefined) {
                 contador++;
             }
         });
+        console.log(contador);
         if (Object.keys(req.body).length > contador) {
-            throw new Error("Se enviaron uno o mas campos invalidos");
+            throw new Error("Se enviaron uno o mas campos invalidosaaa");
         }
 
         // Transforma las variables a tipo string en mayusculas
         [nombre, descripcion] = [nombre, descripcion].map((element) =>
-            element.toString().toUpperCase()
+            element && element.toString().toUpperCase()
         );
 
         // Verifica que el libro no este repetido
@@ -83,12 +87,14 @@ app.post("/libro", async (req, res) => {
             throw new Error("Ese libro ya existe");
         }
 
-        // Verifica que la persona exista
-        query = "SELECT * FROM persona WHERE id = ?";
-        queryRes = await qy(query, [persona_id]);
-        if (queryRes.length == 0) {
-            throw new Error("No existe la persona indicada");
-        }
+        // Verifica que, si se envio, la persona exista
+        if (!!persona_id) {
+            query = "SELECT * FROM persona WHERE id = ?";
+            queryRes = await qy(query, [persona_id]);
+            if (queryRes.length == 0) {
+                throw new Error("No existe la persona indicada");
+            }
+        };
 
         // Carga el nuevo libro en la base de datos
         query =
@@ -307,6 +313,56 @@ app.put('/persona/:id', async (req, res) => {
 
         // Muestra la persona actualizada
         query = 'SELECT * FROM persona WHERE id = ?';
+        queryRes = await qy(query, id);
+
+        res.status(200);
+        res.send(queryRes[0]);
+
+    } catch (e) {
+        res.status(413).send({ "Error": e.message });
+    }
+});
+
+app.put('/libro/:id', async (req, res) => {
+    try {
+        // Desestructura los parametros y objeto
+        const id = req.params.id;
+        let { descripcion } = req.body;
+
+        // Verifica que no se hayan enviado campos que no existen 
+        // y que los que existen no sean espacios en blanco
+        let contador = 0;
+        [descripcion].forEach(element => {
+            if (!!element) {
+                contador++
+                if (element.replace(/ /g, '') === '') {
+                    throw new Error('Se enviaron uno o mas campos invalidos');
+                }
+            }
+        })
+        if (Object.keys(req.body).length > contador) {
+            throw new Error('Sólo se puede modificar la descripción del libro')
+        };
+
+        // Verifica que el libro exista
+        let query = 'SELECT * FROM libro WHERE id = ?';
+        let queryRes = await qy(query, id);
+
+        if (queryRes.length === 0) {
+            throw new Error('No se encuentra ese libro');
+        };
+
+        // Transforma las variables que no sean indefinidas a tipo string en mayusculas
+        [descripcion] = [descripcion].map(element => {
+            return (!!element ? element.toString().toUpperCase() : element);
+        });
+
+        // Modifica la descripcion del libro
+        query = `UPDATE libro SET descripcion = ? WHERE id = ?`;
+        queryRes = await qy(query, [descripcion, id]);
+
+        // Muestra la persona actualizada
+        query = 'SELECT * FROM libro WHERE id = ?';
         queryRes = await qy(query, id);
 
         res.status(200);
