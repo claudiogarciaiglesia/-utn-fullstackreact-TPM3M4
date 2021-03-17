@@ -371,11 +371,49 @@ app.put('/libro/devolver/:id', async (req, res) => {
             }
         }
     }
+
+            catch(e){
+            console.error(e.message);
+            res.status(413).send({"Error": e.message});
+        }
+});
+
+app.put('/libro/prestar/:id', async (req, res)=>{
+    try{
+        const persona_id = req.body.persona_id;
+
+        let query = 'SELECT * FROM persona WHERE id = ?';
+        let respuesta = await qy(query, [persona_id]);
+        if (respuesta.length==0) {
+            throw new Error("No se encontró la persona a la que se quiere prestar el libro");
+        }
+        //Compruebo que el libro exista
+        query = 'SELECT * FROM libro WHERE id = ?';
+        respuesta = await qy(query, [req.params.id]);
+        if (respuesta.length==0) {
+            throw new Error("No se encontró el libro");
+        }
+        //Compruebo que el libro esté prestado
+        else{
+        query = 'SELECT * FROM libro WHERE id = ? AND persona_id is not NULL';
+        respuesta = await qy(query, [req.params.id]);
+        if (respuesta.length>0) {
+            throw new Error("Ese libro está prestado, no se puede prestar hasta que no se devuelva");
+        }
+        //Hechas las comprobaciones, actualizo la columna
+            else{
+            query = 'UPDATE libro SET persona_id = ?';
+            respuesta = await qy(query, [persona_id]);
+            res.status(200).send("Se prestó correctamente");
+            }
+        }
+
     catch (e) {
         console.error(e.message);
         res.status(413).send({ "Error": e.message });
     }
 });
+
 
 
 
@@ -467,7 +505,6 @@ app.get('/libro', async (req, res) => {
         res.status(413).send({ "Error": e.message });
     }
 });
-
 
 // Se ejecuta la app para que escuche al puerto determinado
 app.listen(PORT, () => {
