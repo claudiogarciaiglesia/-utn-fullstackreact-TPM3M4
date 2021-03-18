@@ -464,15 +464,18 @@ app.put('/libro/prestar/:id', async (req, res) => {
         let query = 'SELECT * FROM persona WHERE id = ?';
         let respuesta = await qy(query, [persona_id]);
         if (respuesta.length == 0) {
+            res.status(404);
             throw new Error("No se encontró la persona a la que se quiere prestar el libro");
         }
         //Compruebo que el libro exista
         query = 'SELECT * FROM libro WHERE id = ?';
         respuesta = await qy(query, [req.params.id]);
         if (respuesta.length == 0) {
+            res.status(404);
             throw new Error("No se encontró el libro");
         }
-        //Compruebo que el libro esté prestado
+
+        //Compruebo que el libro no esté prestado
         else {
             query = 'SELECT * FROM libro WHERE id = ? AND persona_id is not NULL';
             respuesta = await qy(query, [req.params.id]);
@@ -483,14 +486,12 @@ app.put('/libro/prestar/:id', async (req, res) => {
             else {
                 query = 'UPDATE libro SET persona_id = ?';
                 respuesta = await qy(query, [persona_id]);
-                res.status(200).send("Se prestó correctamente");
+                res.status(200).send({ mensaje: "se presto correctamente" });
             }
         }
-
-
     } catch (e) {
-        console.error(e.message);
-        res.status(413).send({ "Error": e.message });
+        if (res.statusCode === 200) { res.status(413) }
+        res.send({ 'Error': e.message });
     }
 });
 
