@@ -241,7 +241,8 @@ app.post('/persona', async (req, res) => {
         res.send(queryRes[0]);
 
     } catch (e) {
-        res.status(413).send({ "Error": e.message });
+        if (res.statusCode === 200) { res.status(413) }
+        res.send({ 'Error': e.message });
     }
 });
 
@@ -319,7 +320,8 @@ app.put('/persona/:id', async (req, res) => {
         res.send(queryRes[0]);
 
     } catch (e) {
-        res.status(413).send({ "Error": e.message });
+        if (res.statusCode === 200) { res.status(413) }
+        res.send({ 'Error': e.message });
     }
 });
 
