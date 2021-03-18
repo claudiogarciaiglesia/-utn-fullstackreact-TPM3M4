@@ -157,6 +157,9 @@ app.post('/categoria', async (req, res) => {
             throw new Error('Faltan datos')
         }
 
+        // Transforma las variables a tipo string en mayusculas
+        nombre = nombre.toUpperCase();
+        
         //Verifico que no exista previamente esa categoria
         let query = 'SELECT id FROM categoria WHERE nombre = ?';
 
