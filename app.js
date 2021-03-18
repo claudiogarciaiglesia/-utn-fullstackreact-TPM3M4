@@ -137,11 +137,24 @@ app.post('/categoria', async (req, res) => {
     try {
         // Valido que me manden bien la info
         if (!req.body.nombre) {
-            throw new Error('Faltan datos');
-
+            throw new Error('Faltan datos')
         }
 
         const nombre = req.body.nombre;
+
+        // Verifica que las variables no sean invalidas
+        if (nombre === null) {
+            throw new Error('Faltan datos');
+        }
+        if (nombre === "") {
+            throw new Error('Faltan datos');
+        }
+        if (nombre && typeof (nombre) !== 'string') {
+            throw new Error('Error inesperado');
+        }
+        if (nombre.replace(/ /g, '') === '') {
+            throw new Error('Faltan datos')
+        }
 
         //Verifico que no exista previamente esa categoria
         let query = 'SELECT id FROM categoria WHERE nombre = ?';
@@ -160,9 +173,8 @@ app.post('/categoria', async (req, res) => {
         res.status(200).send("Se guardo correctamente");
     }
     catch (e) {
-        console.error(e.mesagge);
-        res.status(413).send({ "Error": e.mesagge });
-
+        if (res.statusCode === 200) { res.status(413) }
+        res.send({ 'Error': e.message });
     }
 
 });
