@@ -552,7 +552,7 @@ app.get('/persona', async (req, res) => {
         let queryRes = await qy(query);
 
         if (queryRes.length === 0) {
-            res.status(413).send([]);
+            res.status(404).send([]);
         };
 
         res.status(200);
@@ -640,7 +640,7 @@ app.route('/persona/:id')
             query = 'DELETE FROM persona WHERE id = ?';
             respuesta = await qy(query, [req.params.id]);
             res.status(200).send({ "mensaje": "Se borro correctamente" });
-            
+
         } catch (e) {
             if (res.statusCode === 200) { res.status(413) }
             res.send({ 'mensaje': e.message });
