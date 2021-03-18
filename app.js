@@ -404,6 +404,7 @@ app.delete('/libro/:id', async (req, res) => {
         let query = 'SELECT * FROM libro WHERE id = ?';
         let respuesta = await qy(query, id);
         if (respuesta.length == 0) {
+            res.status(404);
             throw new Error("No se encuentra este libro");
         }
         //En caso de que exista verifico el estado de persona_id para ver si fue prestado
@@ -417,13 +418,12 @@ app.delete('/libro/:id', async (req, res) => {
             else {
                 query = 'DELETE FROM libro WHERE id = ?';
                 respuesta = await qy(query, id);
-                res.status(200).send("Se borro correctamente");
+                res.status(200).send({ mensaje: "Se borro correctamente" });
             }
         }
-    }
-    catch (e) {
-        console.error(e.message);
-        res.status(413).send({ "Error": e.message });
+    } catch (e) {
+        if (res.statusCode === 200) { res.status(413) }
+        res.send({ 'Error': e.message });
     }
 });
 
