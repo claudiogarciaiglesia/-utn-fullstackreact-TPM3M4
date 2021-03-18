@@ -18,6 +18,7 @@ const PORT = process.env.PORT || 3000;
 
 // Configuracion mysql
 const mysql = require('mysql');
+const { runInNewContext } = require('vm');
 
 // Estos datos de conexion pueden variar segun como este configurado el servidor de cada usuario
 const conexion = mysql.createConnection({
@@ -191,7 +192,12 @@ app.delete('/categoria/:id', async (req, res) => {
         let respuesta = await qy(query, [req.params.id]);
 
         if (respuesta.length > 0) {
-            throw new Error("Categoria con libro asociado, no se puede eliminar");
+            throw new Error('Categoria con libro asociado, no se puede eliminar');
+        }
+
+        if (respuesta.length === 0) {
+            res.status(404);
+            throw new Error('No existe la categoria indicada')
         }
 
         //Elimino la categoria
@@ -199,13 +205,11 @@ app.delete('/categoria/:id', async (req, res) => {
 
         respuesta = await qy(query, [req.params.id]);
 
-        res.status(200).send("Se borro correctamente");
+        res.status(200).send('Se borro correctamente');
 
-    }
-    catch (e) {
-        console.error(e.mesagge);
-        res.status(413).send({ "Error": e.mesagge });
-
+    } catch (e) {
+        if (res.statusCode === 200) { res.status(413) }
+        res.send({ 'Error': e.message });
     }
 });
 
@@ -518,7 +522,7 @@ app.get('/categoria', async (req, res) => {
 
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-         res.send({ 'Error': e.message });
+        res.send({ 'Error': e.message });
     }
 });
 
@@ -541,7 +545,7 @@ app.get('/categoria/:id', async (req, res) => {
 
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-         res.send({ 'Error': e.message });
+        res.send({ 'Error': e.message });
     }
 });
 
@@ -564,7 +568,7 @@ app.get('/persona', async (req, res) => {
 
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-         res.send({ 'Error': e.message });
+        res.send({ 'Error': e.message });
     }
 });
 
