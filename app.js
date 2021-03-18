@@ -110,7 +110,7 @@ app.post("/libro", async (req, res) => {
         res.send(queryRes[0]);
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-        res.send({ 'Error': e.message });
+        res.send({ 'mensaje': e.message });
     }
 });
 
@@ -126,7 +126,7 @@ app.get("/libro/:id", async (req, res) => {
         }
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-        res.send({ 'Error': e.message });
+        res.send({ 'mensaje': e.message });
     }
 });
 
@@ -178,7 +178,7 @@ app.post('/categoria', async (req, res) => {
     }
     catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-        res.send({ 'Error': e.message });
+        res.send({ 'mensaje': e.message });
     }
 
 });
@@ -209,7 +209,7 @@ app.delete('/categoria/:id', async (req, res) => {
 
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-        res.send({ 'Error': e.message });
+        res.send({ 'mensaje': e.message });
     }
 });
 
@@ -261,7 +261,7 @@ app.post('/persona', async (req, res) => {
 
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-        res.send({ 'Error': e.message });
+        res.send({ 'mensaje': e.message });
     }
 });
 
@@ -340,7 +340,7 @@ app.put('/persona/:id', async (req, res) => {
 
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-        res.send({ 'Error': e.message });
+        res.send({ 'mensaje': e.message });
     }
 });
 
@@ -392,7 +392,7 @@ app.put('/libro/:id', async (req, res) => {
 
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-        res.send({ 'Error': e.message });
+        res.send({ 'mensaje': e.message });
     }
 });
 
@@ -423,7 +423,7 @@ app.delete('/libro/:id', async (req, res) => {
         }
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-        res.send({ 'Error': e.message });
+        res.send({ 'mensaje': e.message });
     }
 });
 
@@ -453,7 +453,7 @@ app.put('/libro/devolver/:id', async (req, res) => {
 
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-        res.send({ 'Error': e.message });
+        res.send({ 'mensaje': e.message });
     }
 });
 
@@ -491,7 +491,7 @@ app.put('/libro/prestar/:id', async (req, res) => {
         }
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-        res.send({ 'Error': e.message });
+        res.send({ 'mensaje': e.message });
     }
 });
 
@@ -518,7 +518,7 @@ app.get('/categoria', async (req, res) => {
 
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-        res.send({ 'Error': e.message });
+        res.send({ 'mensaje': e.message });
     }
 });
 
@@ -541,7 +541,7 @@ app.get('/categoria/:id', async (req, res) => {
 
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-        res.send({ 'Error': e.message });
+        res.send({ 'mensaje': e.message });
     }
 });
 
@@ -564,7 +564,7 @@ app.get('/persona', async (req, res) => {
 
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-        res.send({ 'Error': e.message });
+        res.send({ 'mensaje': e.message });
     }
 });
 
@@ -588,7 +588,7 @@ app.get('/libro', async (req, res) => {
 
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-        res.send({ 'Error': e.message });
+        res.send({ 'mensaje': e.message });
     }
 });
 
@@ -611,37 +611,42 @@ app.route('/persona/:id')
 
         } catch (e) {
             if (res.statusCode === 200) { res.status(413) }
-            res.send({ "Error": e.message });
+            res.send({ 'mensaje': e.message });
         }
     })
 
     .delete(async (req, res) => {
+
         try {
-            const queryVerify = 'SELECT * FROM libro WHERE persona_id=?';
-            let respuesta = await qy(queryVerify, [req.params.id]);
 
-            if (respuesta.length > 0) {
-                res.status(413).send('Esa persona tiene libros asociados, no se puede eliminar');
-            }
+            //Verificamos si existe la persona
+            let querySelect = 'SELECT * FROM persona where id=?';
+            let respuesta = await qy(querySelect, [req.params.id]);
 
-            querySelect = 'SELECT * FROM persona where id=?';
-            const queryDelete = 'DELETE FROM persona where id=?';
-            respuesta = await qy(querySelect, [req.params.id]);
-
-            if (respuesta.length == 1) {
-
-                await qy(queryDelete, [req.params.id]);
-                res.status(200).send('Usuario borrado exitosamente');
-            } else {
+            if (respuesta.length === 0) {
                 res.status(404);
                 throw new Error('Persona no encontrada');
             }
+
+            //Verificamos que no haya libros asociados a esa persona
+            let queryDelete = 'SELECT * FROM libro WHERE persona_id = ?';
+            respuesta = await qy(queryDelete, [req.params.id]);
+
+            if (respuesta.length > 0) {
+                throw new Error('Esa persona tiene libros asociados, no se puede eliminar');
+            }
+
+            //Elimino la persona
+            query = 'DELETE FROM persona WHERE id = ?';
+            respuesta = await qy(query, [req.params.id]);
+            res.status(200).send({ "mensaje": "Se borro correctamente" });
+            
         } catch (e) {
             if (res.statusCode === 200) { res.status(413) }
-            res.send({ 'Error': e.message });
+            res.send({ 'mensaje': e.message });
         }
-
-    })
+    }
+    );
 
 // Se ejecuta la app para que escuche al puerto determinado
 app.listen(PORT, () => {
