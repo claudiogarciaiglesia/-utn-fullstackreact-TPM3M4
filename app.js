@@ -201,25 +201,24 @@ app.post('/persona', async (req, res) => {
         // Desestructura el objeto
         let { nombre, apellido, alias, email } = req.body;
 
-        // Verifica que las variables definidas en el paso anterior no sean indefinidas (undefined)
-        // y que no sean espacios en blanco o vacios.
+        // Verifica que las variables no sean invalidas
         [nombre, apellido, alias, email].forEach(element => {
-            if (!element || (element.replace(/ /g, '') === '')) {
+            if (element === null) {
+                throw new Error('Faltan datos');
+            }
+            if (element === "") {
+                throw new Error('Faltan datos');
+            }
+            if (element && typeof (element) !== 'string') {
+                throw new Error('Error inesperado');
+            }
+            if (element.replace(/ /g, '') === '') {
                 throw new Error('Faltan datos')
             }
         });
 
-        // Verifica que no se hayan enviado campos que no existen
-        let contador = 0;
-        [nombre, apellido, alias, email].forEach(element => {
-            if (!!element) { contador++ }
-        })
-        if (Object.keys(req.body).length > contador) {
-            throw new Error('Se enviaron uno o mas campos invalidos')
-        };
-
         // Transforma las variables a tipo string en mayusculas
-        [nombre, apellido, alias, email] = [nombre, apellido, alias, email].map(element => (element.toString().toUpperCase()));
+        [nombre, apellido, alias, email] = [nombre, apellido, alias, email].map(element => (element.toUpperCase()));
 
         // Verifica que el email no este repetido
         let query = 'SELECT * FROM persona WHERE email = ?';
@@ -252,21 +251,6 @@ app.put('/persona/:id', async (req, res) => {
         const id = req.params.id;
         let { nombre, apellido, alias, email } = req.body;
 
-        // Verifica que no se hayan enviado campos que no existen 
-        // y que los que existen no sean espacios en blanco
-        let contador = 0;
-        [nombre, apellido, alias, email].forEach(element => {
-            if (!!element) {
-                contador++
-                if (element.replace(/ /g, '') === '') {
-                    throw new Error('Se enviaron uno o mas campos invalidos');
-                }
-            }
-        })
-        if (Object.keys(req.body).length > contador) {
-            throw new Error('Se enviaron uno o mas campos invalidos')
-        };
-
         // Verifica que la persona exista
         let query = 'SELECT * FROM persona WHERE id = ?';
         let queryRes = await qy(query, id);
@@ -275,9 +259,25 @@ app.put('/persona/:id', async (req, res) => {
             throw new Error('No se encuentra esa persona');
         };
 
+        // Verifica que las variables no sean invalidas
+        [nombre, apellido, alias, email].forEach(element => {
+            if (element === null) {
+                throw new Error('Faltan datos');
+            }
+            if (element === "") {
+                throw new Error('Faltan datos');
+            }
+            if (element && typeof (element) !== 'string') {
+                throw new Error('Error inesperado');
+            }
+            if (element.replace(/ /g, '') === '') {
+                throw new Error('Faltan datos')
+            }
+        });
+
         // Transforma las variables que no sean indefinidas a tipo string en mayusculas
         [nombre, apellido, alias, email] = [nombre, apellido, alias, email].map(element => {
-            return (!!element ? element.toString().toUpperCase() : element);
+            return (!!element ? element.toUpperCase() : element);
         });
 
         // Verifica que no se este intentando modificar el email siempre que haya sido enviado
@@ -574,44 +574,44 @@ app.get('/libro', async (req, res) => {
 //Los Endpoints los hice con un route para agrupar los metodos de persona/:id
 app.route('/persona/:id')
 
-.get( async (req,res)=>{
-    try{
-        const query = 'SELECT * FROM persona where id=?';
-        const respuesta = await qy(query, [req.params.id]);
+    .get(async (req, res) => {
+        try {
+            const query = 'SELECT * FROM persona where id=?';
+            const respuesta = await qy(query, [req.params.id]);
 
-        if(respuesta.length == 1){
-            res.status(200).json(respuesta[0]).send();
+            if (respuesta.length == 1) {
+                res.status(200).json(respuesta[0]).send();
 
-        } else{
-            res.status(404).send('Persona no encontrada');
+            } else {
+                res.status(404).send('Persona no encontrada');
+            }
+
+        } catch (e) {
+            console.error(e.message);
+            res.status(413).send('ERROR INESPERADO');
+        }
+    })
+
+    .delete(async (req, res) => {
+        try {
+            const querySelect = 'SELECT * FROM persona where id=?';
+            const queryDelete = 'DELETE FROM persona where id=?';
+            const respuesta = await qy(querySelect, [req.params.id]);
+
+            if (respuesta.length == 1) {
+
+                await qy(queryDelete, [req.params.id]);
+                res.status(200).send('USUARIO BORRADO EXITOSAMENTE');
+            } else {
+                res.status(404).send('USUARIO NO ENCONTRADO');
+            }
+
+        } catch (e) {
+            console.error(e.message);
+            res.status(413).send('ERROR INESPERADO');
         }
 
-    }catch(e){
-        console.error(e.message);
-        res.status(413).send('ERROR INESPERADO');
-    }
-})
-
-.delete( async (req,res)=>{
-    try{
-        const querySelect = 'SELECT * FROM persona where id=?';
-        const queryDelete = 'DELETE FROM persona where id=?';
-        const respuesta = await qy(querySelect, [req.params.id]);
-        
-        if(respuesta.length == 1){
-        
-            await qy(queryDelete, [req.params.id]);
-            res.status(200).send('USUARIO BORRADO EXITOSAMENTE');
-        } else{
-            res.status(404).send('USUARIO NO ENCONTRADO');
-        }
-
-    }catch(e){
-        console.error(e.message);
-        res.status(413).send('ERROR INESPERADO');
-    }
-
-})
+    })
 
 // Se ejecuta la app para que escuche al puerto determinado
 app.listen(PORT, () => {
