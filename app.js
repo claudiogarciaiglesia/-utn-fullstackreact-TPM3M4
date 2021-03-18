@@ -64,18 +64,6 @@ app.post("/libro", async (req, res) => {
             throw new Error("Nombre y categoria son datos obligatorios");
         }
 
-        // Verifica que no se hayan enviado campos que no existen
-        let contador = 0;
-        [nombre, descripcion, categoria_id, persona_id].forEach((element) => {
-            if (element !== undefined) {
-                contador++;
-            }
-        });
-        console.log(contador);
-        if (Object.keys(req.body).length > contador) {
-            throw new Error("Se enviaron uno o mas campos invalidosaaa");
-        }
-
         // Transforma las variables a tipo string en mayusculas
         [nombre, descripcion] = [nombre, descripcion].map((element) =>
             element && element.toString().toUpperCase()
@@ -93,8 +81,18 @@ app.post("/libro", async (req, res) => {
             query = "SELECT * FROM persona WHERE id = ?";
             queryRes = await qy(query, [persona_id]);
             if (queryRes.length == 0) {
+                res.status(404);
                 throw new Error("No existe la persona indicada");
             }
+        };
+
+        // Verifica que la categoria exista
+
+        query = "SELECT * FROM categoria WHERE id = ?";
+        queryRes = await qy(query, [categoria_id]);
+        if (queryRes.length == 0) {
+            res.status(404);
+            throw new Error("No existe la categoria indicada");
         };
 
         // Carga el nuevo libro en la base de datos
@@ -111,7 +109,8 @@ app.post("/libro", async (req, res) => {
         res.status(200);
         res.send(queryRes[0]);
     } catch (e) {
-        res.status(413).send({ Error: e.message });
+        if (res.statusCode === 200) { res.status(413) }
+        res.send({ 'Error': e.message });
     }
 });
 
