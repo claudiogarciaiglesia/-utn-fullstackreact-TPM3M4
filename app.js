@@ -168,9 +168,12 @@ app.post('/categoria', async (req, res) => {
         //Guardo la nueva categoria
         query = 'INSERT INTO categoria (nombre) VALUE (?)';
         respuesta = await qy(query, [nombre]);
+        let idNuevo = respuesta.insertId;
 
-        console.log(respuesta);
-        res.status(200).send("Se guardo correctamente");
+        query = 'SELECT * FROM categoria WHERE id = ?'
+        respuesta = await qy(query, [idNuevo]);
+
+        res.status(200).send(respuesta[0]);
     }
     catch (e) {
         if (res.statusCode === 200) { res.status(413) }
@@ -503,7 +506,7 @@ app.get('/categoria', async (req, res) => {
         let queryRes = await qy(query);
 
         if (queryRes.length === 0) {
-            res.status(413).send([]);
+            res.status(404).send([]);
         };
 
         res.status(200);
@@ -514,7 +517,8 @@ app.get('/categoria', async (req, res) => {
         };
 
     } catch (e) {
-        res.status(413).send({ "Error": e.message });
+        if (res.statusCode === 200) { res.status(413) }
+         res.send({ 'Error': e.message });
     }
 });
 
@@ -527,16 +531,17 @@ app.get('/categoria/:id', async (req, res) => {
         let query = 'SELECT * FROM categoria WHERE id = ?';
         let queryRes = await qy(query, [id]);
         if (queryRes.length === 0) {
+            res.status(404);
             throw new Error('Categoria no encontrada');
         };
 
         // Muestra la categoria
-
         res.status(200);
         res.send(queryRes[0]);
 
     } catch (e) {
-        res.status(413).send({ "Error": e.message });
+        if (res.statusCode === 200) { res.status(413) }
+         res.send({ 'Error': e.message });
     }
 });
 
@@ -558,7 +563,8 @@ app.get('/persona', async (req, res) => {
         };
 
     } catch (e) {
-        res.status(413).send({ "Error": e.message });
+        if (res.statusCode === 200) { res.status(413) }
+         res.send({ 'Error': e.message });
     }
 });
 
