@@ -578,18 +578,20 @@ app.get('/libro', async (req, res) => {
         let queryRes = await qy(query);
 
         if (queryRes.length === 0) {
-            res.status(413).send([]);
+            res.status(404).send([]);
         };
 
-        res.status(200);
         if (queryRes.length > 1) {
+            res.status(200);
             res.send(queryRes);
         } else {
+            res.status(200);
             res.send(queryRes[0]);
         };
 
     } catch (e) {
-        res.status(413).send({ "Error": e.message });
+        if (res.statusCode === 200) { res.status(413) }
+         res.send({ 'Error': e.message });
     }
 });
 
