@@ -577,44 +577,56 @@ app.get('/libro', async (req, res) => {
 //Los Endpoints los hice con un route para agrupar los metodos de persona/:id
 app.route('/persona/:id')
 
-    .get(async (req, res) => {
-        try {
+    .get( async (req,res)=>{
+        try{
             const query = 'SELECT * FROM persona where id=?';
             const respuesta = await qy(query, [req.params.id]);
 
-            if (respuesta.length == 1) {
+            if(respuesta.length == 1){
                 res.status(200).json(respuesta[0]).send();
 
-            } else {
-                res.status(404).send('Persona no encontrada');
+            } else{
+                res.status(413).send({"mensaje" : "Persona no encontrada"});
             }
 
-        } catch (e) {
+        }catch(e){
             console.error(e.message);
-            res.status(413).send('ERROR INESPERADO');
+            res.status(413).send({"mensaje" : "Error inesperado"});
         }
     })
 
-    .delete(async (req, res) => {
+    .delete( async (req,res)=>{
+
         try {
-            const querySelect = 'SELECT * FROM persona where id=?';
-            const queryDelete = 'DELETE FROM persona where id=?';
-            const respuesta = await qy(querySelect, [req.params.id]);
 
-            if (respuesta.length == 1) {
+            //Verificamos si existe la persona
+            let querySelect = 'SELECT * FROM persona where id=?';
+            let respuesta = await qy(querySelect, [req.params.id]);
 
-                await qy(queryDelete, [req.params.id]);
-                res.status(200).send('USUARIO BORRADO EXITOSAMENTE');
-            } else {
-                res.status(404).send('USUARIO NO ENCONTRADO');
+            if (respuesta.length === 0) {
+                res.status(413).send({"mensaje" : "No existe esa persona"});
+                return;
             }
 
-        } catch (e) {
-            console.error(e.message);
-            res.status(413).send('ERROR INESPERADO');
-        }
+            //Verificamos que no haya libros asociados a esa persona
+            let queryDelete = 'SELECT * FROM libro WHERE persona_id = ?';
+            respuesta = await qy(queryDelete, [req.params.id]);
 
-    })
+            if (respuesta.length > 0) {
+                res.status(413).send({"mensaje" : "Esa persona tiene libros asociados, no se puede eliminar"});
+                return;
+            }
+
+            //Elimino la persona
+            query = 'DELETE FROM persona WHERE id = ?';
+            respuesta = await qy(query, [req.params.id]);
+            res.status(200).send({"mensaje" : "Se borro correctamente"});
+        }catch (e) {
+            res.status(413).send({ "mensaje": e.mesagge });
+
+        }
+    }
+);
 
 // Se ejecuta la app para que escuche al puerto determinado
 app.listen(PORT, () => {
