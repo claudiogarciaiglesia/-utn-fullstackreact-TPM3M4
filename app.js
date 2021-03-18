@@ -118,14 +118,15 @@ app.get("/libro/:id", async (req, res) => {
     try {
         const query = "SELECT * FROM libro WHERE id = ?";
         const respuesta = await qy(query, [req.params.id]);
-        if (respuesta.length == 1) {
+        if (respuesta.length === 1) {
             res.send(respuesta[0]);
         } else {
-            res.status(404).send("No se encuentra ese libro");
+            res.status(404);
+            throw new Error('No se encuentra ese libro');
         }
     } catch (e) {
-        console.error(e.message);
-        res.status(413).send({ Error: e.message });
+        if (res.statusCode === 200) { res.status(413) }
+        res.send({ 'Error': e.message });
     }
 });
 
@@ -349,38 +350,32 @@ app.put('/libro/:id', async (req, res) => {
         const id = req.params.id;
         let { descripcion } = req.body;
 
-        if (descripcion !== null) {
-
-            // Verifica que se haya enviado la descripcion
-            if (descripcion !== "" && !descripcion) {
-                throw new Error('Se debe enviar la descripcion')
-            }
-
-            // Verifica el tipo de dato enviado
-            if (typeof (descripcion) !== 'string') {
-                throw new Error('Se enviaron datos invalidos')
-            }
-
-            // Verifica que no se hayan enviado campos que no existen 
-            // y que los que existen no sean espacios en blanco
-            console.log(Object.keys(req.body).length);
-            if (Object.keys(req.body).length > 1) {
-                throw new Error('Sólo se puede modificar la descripción del libro')
-            };
-
-            if (descripcion.replace(/ /g, '') === '') {
-                descripcion = "";
-            }
-
-            // Transforma las variables a mayusculas
-            descripcion = descripcion.toString().toUpperCase();
+        if (!descripcion) {
+            throw new Error('Faltan datos');
         }
+        if (descripcion === null) {
+            throw new Error('Faltan datos');
+        }
+        if (descripcion === "") {
+            throw new Error('Faltan datos');
+        }
+        if (descripcion && typeof (descripcion) !== 'string') {
+            throw new Error('Error inesperado');
+        }
+        if (descripcion.replace(/ /g, '') === '') {
+            throw new Error('Faltan datos')
+        }
+
+        // Transforma las variables a mayusculas
+        descripcion = descripcion.toString().toUpperCase();
+
 
         // Verifica que el libro exista
         let query = 'SELECT * FROM libro WHERE id = ?';
         let queryRes = await qy(query, id);
 
         if (queryRes.length === 0) {
+            res.status(404);
             throw new Error('No se encuentra ese libro');
         }
 
@@ -396,7 +391,8 @@ app.put('/libro/:id', async (req, res) => {
         res.send(queryRes[0]);
 
     } catch (e) {
-        res.status(413).send({ "Error": e.message });
+        if (res.statusCode === 200) { res.status(413) }
+        res.send({ 'Error': e.message });
     }
 });
 
@@ -591,7 +587,7 @@ app.get('/libro', async (req, res) => {
 
     } catch (e) {
         if (res.statusCode === 200) { res.status(413) }
-         res.send({ 'Error': e.message });
+        res.send({ 'Error': e.message });
     }
 });
 
