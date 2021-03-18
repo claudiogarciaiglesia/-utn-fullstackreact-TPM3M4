@@ -583,12 +583,13 @@ app.route('/persona/:id')
                 res.status(200).json(respuesta[0]).send();
 
             } else {
-                res.status(404).send('Persona no encontrada');
+                res.status(404);
+                throw new Error('Persona no encontrada');
             }
 
         } catch (e) {
-            console.error(e.message);
-            res.status(413).send('ERROR INESPERADO');
+            if (res.statusCode === 200) { res.status(413) }
+            res.send({ "Error": e.message });
         }
     })
 
@@ -598,7 +599,7 @@ app.route('/persona/:id')
             let respuesta = await qy(queryVerify, [req.params.id]);
 
             if (respuesta.length > 0) {
-                res.status(413).send('ESA PERSONA TIENE LIBROS ASOCIADOS, NO SE PUEDE ELIMINAR');
+                res.status(413).send('Esa persona tiene libros asociados, no se puede eliminar');
             }
 
             querySelect = 'SELECT * FROM persona where id=?';
@@ -608,14 +609,14 @@ app.route('/persona/:id')
             if (respuesta.length == 1) {
 
                 await qy(queryDelete, [req.params.id]);
-                res.status(200).send('USUARIO BORRADO EXITOSAMENTE');
+                res.status(200).send('Usuario borrado exitosamente');
             } else {
-                res.status(404).send('USUARIO NO ENCONTRADO');
+                res.status(404);
+                throw new Error('Persona no encontrada');
             }
-
         } catch (e) {
-            console.error(e.message);
-            res.status(413).send('ERROR INESPERADO');
+            if (res.statusCode === 200) { res.status(413) }
+            res.send({ 'Error': e.message });
         }
 
     })
