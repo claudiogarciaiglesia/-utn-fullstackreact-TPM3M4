@@ -141,7 +141,7 @@ app.post('/categoria', async (req, res) => {
             throw new Error('Faltan datos')
         }
 
-        const nombre = req.body.nombre;
+        let nombre = req.body.nombre;
 
         // Verifica que las variables no sean invalidas
         if (nombre === null) {
@@ -159,7 +159,7 @@ app.post('/categoria', async (req, res) => {
 
         // Transforma las variables a tipo string en mayusculas
         nombre = nombre.toUpperCase();
-        
+
         //Verifico que no exista previamente esa categoria
         let query = 'SELECT id FROM categoria WHERE nombre = ?';
 
