@@ -594,9 +594,16 @@ app.route('/persona/:id')
 
     .delete(async (req, res) => {
         try {
-            const querySelect = 'SELECT * FROM persona where id=?';
+            const queryVerify = 'SELECT * FROM libro WHERE persona_id=?';
+            let respuesta = await qy(queryVerify, [req.params.id]);
+
+            if (respuesta.length > 0) {
+                res.status(413).send('ESA PERSONA TIENE LIBROS ASOCIADOS, NO SE PUEDE ELIMINAR');
+            }
+
+            querySelect = 'SELECT * FROM persona where id=?';
             const queryDelete = 'DELETE FROM persona where id=?';
-            const respuesta = await qy(querySelect, [req.params.id]);
+            respuesta = await qy(querySelect, [req.params.id]);
 
             if (respuesta.length == 1) {
 
