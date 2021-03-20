@@ -1,6 +1,6 @@
 const conexion = require('../db');
 
-const getAllCategories = async () => {
+const listCategories = async () => {
     let categoryList = await conexion.qy('SELECT * FROM categoria');
     return categoryList;
 }
@@ -22,4 +22,9 @@ const deleteCategory = async (id) => {
 
 
 
-module.exports = { getAllCategories }
+module.exports = {
+    listCategories,
+    getCategory,
+    saveCategory,
+    deleteCategory
+}
