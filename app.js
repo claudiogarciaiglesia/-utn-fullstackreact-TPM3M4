@@ -1,4 +1,4 @@
-const { listCategories } = require('./controllers/categoriaController');
+const categoriaController = require('./controllers/categoriaController');
 
 const util = require('util');
 
@@ -12,25 +12,7 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-app.get('/categoria', async (req, res) => {
-    try {
-        let list = await listCategories();
-
-        if (list.length === 0) {
-            res.status(404).send([]);
-        };
-
-        if (list.length > 1) {
-            res.send(list);
-        } else {
-            res.send(list[0]);
-        };
-
-    } catch (e) {
-        if (res.statusCode === 200) { res.status(413) }
-        res.send({ 'mensaje': e.message });
-    }
-});
+app.use('/categoria', categoriaController);
 
 
 // // Rutas de FerPM
