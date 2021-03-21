@@ -14,7 +14,7 @@ const addCategory = async (nombre) => {
     let qRes = await categoriaModel.getCategoryByName(nombre);
 
     if (qRes.length > 0) {
-        throw new Error('Ese nombre de categoria ya existe');
+        return [];
     }
 
     let newId = await categoriaModel.addCategory(nombre);
@@ -23,4 +23,20 @@ const addCategory = async (nombre) => {
     return newCategory;
 }
 
-module.exports = { listCategories, getCategory, addCategory }
+const deleteCategory = async (id) => {
+
+    // FALTA VERIFICAR SI LA CATEGORIA ESTA EN USO
+
+    let categoryToBeDeleted = await categoriaModel.getCategory(id);
+
+    if (categoryToBeDeleted.length === 0) {
+        return [];
+    }
+
+    let qRes = await categoriaModel.deleteCategory(id);
+
+    return true;
+
+}
+
+module.exports = { listCategories, getCategory, addCategory, deleteCategory }
