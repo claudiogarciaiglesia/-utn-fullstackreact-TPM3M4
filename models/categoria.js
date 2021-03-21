@@ -10,7 +10,12 @@ const getCategory = async (id) => {
     return category;
 }
 
-const saveCategory = async (nombre) => {
+const getCategoryByName = async (nombre) => {
+    let category = await conexion.qy('SELECT * FROM categoria WHERE nombre = ?', nombre);
+    return category;
+}
+
+const addCategory = async (nombre) => {
     let result = await conexion.qy('INSERT INTO categoria (nombre) VALUES (?)', nombre)
     return result.insertId;
 }
@@ -25,6 +30,7 @@ const deleteCategory = async (id) => {
 module.exports = {
     listCategories,
     getCategory,
-    saveCategory,
+    getCategoryByName,
+    addCategory,
     deleteCategory
 }

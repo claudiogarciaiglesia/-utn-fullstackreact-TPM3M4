@@ -478,51 +478,6 @@ app.use('/categoria', categoriaController);
 
 
 // //Rutas sin asignar
-// app.get('/categoria', async (req, res) => {
-//     try {
-//         // Muestra las categorias
-//         let query = 'SELECT * FROM categoria';
-//         let queryRes = await qy(query);
-
-//         if (queryRes.length === 0) {
-//             res.status(404).send([]);
-//         };
-
-//         res.status(200);
-//         if (queryRes.length > 1) {
-//             res.send(queryRes);
-//         } else {
-//             res.send(queryRes[0]);
-//         };
-
-//     } catch (e) {
-//         if (res.statusCode === 200) { res.status(413) }
-//         res.send({ 'mensaje': e.message });
-//     }
-// });
-
-// app.get('/categoria/:id', async (req, res) => {
-//     try {
-//         // Desestructuracion
-//         const { id } = req.params;
-
-//         // Verifica que la categoria exista
-//         let query = 'SELECT * FROM categoria WHERE id = ?';
-//         let queryRes = await qy(query, [id]);
-//         if (queryRes.length === 0) {
-//             res.status(404);
-//             throw new Error('Categoria no encontrada');
-//         };
-
-//         // Muestra la categoria
-//         res.status(200);
-//         res.send(queryRes[0]);
-
-//     } catch (e) {
-//         if (res.statusCode === 200) { res.status(413) }
-//         res.send({ 'mensaje': e.message });
-//     }
-// });
 
 // app.get('/persona', async (req, res) => {
 //     try {
